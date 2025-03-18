@@ -1,5 +1,3 @@
-# ge_engine.py
-
 import random
 from grammar import get_grammar, generate_rule
 import numpy as np
@@ -20,13 +18,10 @@ class GrammaticalEvolution:
         self.population = [Individual(generate_rule(grammar)) for _ in range(POPULATION_SIZE)]
 
     def evaluate_fitness(self, individual):
-        # Placeholder for real fitness calculation (backtest results)
-        # Use your backtesting module here
         from backtester import run_backtest
         individual.fitness = run_backtest(individual.rule)
 
     def select_parents(self):
-        # Tournament selection or other strategies
         return random.sample(self.population, 2)
 
     def label_rule_components(self, rule):
@@ -64,7 +59,6 @@ class GrammaticalEvolution:
         if not components:
             return False
         
-        # Grammar: indicator -> operator -> value -> (optional and/or) -> then action
         valid_structure = [("indicator",), ("operator",), ("value",)]
         
         i = 0
@@ -74,11 +68,9 @@ class GrammaticalEvolution:
                     return False
                 i += 1
             
-            # Check for 'and', 'or'
             if i < len(components) and components[i][0] == "logic":
-                i += 1  # Skip 'and' or 'or' and repeat
+                i += 1  
         
-        # Validate the action part
         if i < len(components) and components[i][0] == "action":
             return True
         return False
@@ -88,24 +80,17 @@ class GrammaticalEvolution:
         Improved crossover method that follows the grammar structure:
         <indicator> <operator> <value> and <indicator> <operator> <value> then <action>
         """
-        # Perform crossover by splitting at logical points
         if random.random() < CROSSOVER_RATE:
-            # Label the components of both parent rules
             components1 = self.label_rule_components(parent1.rule)
             components2 = self.label_rule_components(parent2.rule)
 
-            # Ensure we have valid labeled components
             if not self.validate_rule_structure(components1) or not self.validate_rule_structure(components2):
                 return parent1.rule  # Return parent rule if structure is invalid
 
-            # Split at random crossover points
-            crossover_point1 = random.randint(1, len(components1) - 1)  # Avoid first token
+            crossover_point1 = random.randint(1, len(components1) - 1) 
             crossover_point2 = random.randint(1, len(components2) - 1)
-
-            # Create child components by combining parts from each parent
             child_components = components1[:crossover_point1] + components2[crossover_point2:]
 
-            # Validate the new structure before returning the child rule
             if self.validate_rule_structure(child_components):
                 return ' '.join([component[1] for component in child_components])
             else:
@@ -116,7 +101,6 @@ class GrammaticalEvolution:
 
 
     def mutate(self, rule):
-        # Mutate rule by randomly changing parts of it
         if random.random() < MUTATION_RATE:
             grammar = get_grammar()
             rule = generate_rule(grammar)
@@ -126,9 +110,7 @@ class GrammaticalEvolution:
         try:
             self.initialize_population()
 
-            # Outer progress bar for generations
             for generation in tqdm(range(GENERATIONS), desc="Generations"):
-                # Inner progress bar for individuals in each generation
                 with tqdm(total=POPULATION_SIZE, desc=f"Evaluating Gen {generation + 1}", leave=False) as progress_bar:
                     for individual in self.population:
                         # print(individual.rule)
@@ -136,13 +118,10 @@ class GrammaticalEvolution:
                             self.evaluate_fitness(individual)
                         except Exception as exc:
                             print(f"An error occurred while evaluating {individual.rule}: {exc}")
-                            # You may want to regenerate or skip the invalid individual
-                        progress_bar.update(1)  # Update progress bar for each individual
+                        progress_bar.update(1) 
 
-                # Sort population by fitness
                 self.population.sort(key=lambda ind: ind.fitness, reverse=True)
 
-                # Create new population
                 new_population = []
 
                 if ELITISM:
@@ -156,7 +135,6 @@ class GrammaticalEvolution:
 
                 self.population = new_population
 
-                # Output the best individual of this generation
                 print(f"Generation {generation + 1}, Best Rule: {self.population[0].rule}, Fitness: {self.population[0].fitness}")
 
         except KeyboardInterrupt:
