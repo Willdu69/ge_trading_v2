@@ -1,5 +1,3 @@
-# grammar.py
-
 import random
 
 def get_grammar():
